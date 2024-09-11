@@ -211,6 +211,8 @@ function GetById() {
             </table>
           ) : (
             <p>No departments available.</p>
+
+            
           )}
         </div>
       )}
