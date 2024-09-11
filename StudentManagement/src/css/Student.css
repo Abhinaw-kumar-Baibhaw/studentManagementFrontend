@@ -1,0 +1,88 @@
+/* src/StudentForm.css */
+.student-form {
+  display: flex;
+  flex-direction: column;
+  /* max-width: 600px; */
+  /* width: 425px; */
+  margin: 0 auto;
+  padding: 20px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding-right:35px;
+}
+
+.student-form div {
+  margin-bottom: 15px;
+}
+
+body {
+  background-color: white; 
+  color: black;
+}
+
+label{
+  font-weight: 600;
+}
+.navbar {
+  background-color: rgba(105, 124, 121, 0.094) !important; /* Force Navbar background to black */
+  color: rgb(3, 1, 21) ;
+  border-radius: 10px;
+}
+.navbar-dark{
+  color: black;
+}
+.navbar-brand{
+  color: black;
+}
+.navbar-dark:hover{
+  color: black;
+}
+.nav-link{
+  color: black;
+}
+.nav-link:hover{
+  color: black;
+}
+.student-form label {
+  float: left;
+  display: block;
+  margin-bottom: 5px;
+}
+
+.student-form input,
+.student-form select {
+  width: 106%;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.student-form button {
+  padding: 10px 15px;
+  border: none;
+  background-color: #0056b3;
+  color: #fff;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.student-form button:hover {
+  background-color: #02182ef1;
+}
+
+tr{
+  padding: 20px;
+}
+/* Student.css */
+.table th, .table td {
+  text-align: center;
+}
+
+.table thead {
+  background-color: #f8f9fa;
+}
+
+.table tbody tr:hover {
+  background-color: #e9ecef;
+}
+
