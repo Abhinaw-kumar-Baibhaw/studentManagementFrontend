@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import axios from 'axios';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import '../css/Student.css';
 
@@ -11,6 +10,7 @@ function Student() {
     password: '',
     date: '',
     gender: '',
+    isVerified: 'false',
     addresses: [{
       streetName: '',
       city: '',
@@ -23,28 +23,84 @@ function Student() {
     mobiles: [{
       mobileNumber: '',
       mobileType: ''
-    }]
+    }],
+    courses: {
+      id: '',
+      name: '',
+      courseDescription: '',
+      courseFee: '',
+      createdAt: '',
+      updatedAt: '',
+      duration: '',
+      departments: []
+    },
+    departmentDto: {
+      id: '',
+      name: ''
+    }
   });
 
+  const [courseData, setCourseData] = useState(null);
+  const [departmentData, setDepartmentData] = useState(null);
+
+  const addressTypes = ["PERMANENT", "WORKING", "OTHERS"];
+  const mobileTypes = ["PERSONAL", "PARENT", "FAMILY", "OTHERS"];
+
   const styles = {
-    width: '106%',
+    width: '100%',
     backgroundColor: 'white',
     color: 'black',
     borderColor: 'black'
   };
 
-
-  const submit = {
-    backgroundColor:'rgb(134 53 220);'
+  const floaat = {
+    float:'right'
   }
 
-  const remove = {
-    backgroundColor:'#ff0000'
+  const floaat1 = {
+    width: '85px',
+    float:'right'
   }
+  const addButton = {
+    float:'right',
+    width:'30%',
+    backgroundColor:'gray',
+    color:'black',
+  }
+  const boxStyle = {
+    border: '1px solid #ccc',
+    borderRadius: '5px',
+    padding: '15px',
+    marginBottom: '10px',
+    backgroundColor: '#f9f9f9',
+    marginTop:'20px'
+  };
+
+  const addDiv = {
+    marginBottom: '2%',
+    marginTop:'2%',
+    fontSize:'25px'
+  }
+  const addDiv1 = {
+    marginBottom: '10%',
+    marginTop:'2%',
+    fontSize:'25px'
+  }
+
+  const submitStyle = {
+    backgroundColor: 'rgb(134 53 220)',
+    color: 'white'
+  };
+
+  const removeStyle = {
+    backgroundColor: '#ff0000',
+    color: 'white'
+  };
+ 
 
   const handleChange = (e, index, section) => {
     const { name, value, type, checked, dataset } = e.target;
-
+  
     if (dataset.section === 'address') {
       const updatedAddresses = formData.addresses.map((address, idx) => {
         if (index === idx) {
@@ -55,7 +111,7 @@ function Student() {
         }
         return address;
       });
-
+  
       setFormData(prevState => ({
         ...prevState,
         addresses: updatedAddresses
@@ -70,16 +126,124 @@ function Student() {
         }
         return mobile;
       });
-
+  
       setFormData(prevState => ({
         ...prevState,
         mobiles: updatedMobiles
       }));
-    } else {
-      setFormData({
-        ...formData,
-        [name]: type === 'checkbox' ? checked : value
+    } else if (dataset.section === 'course') {
+      // Handle course data update
+      setFormData(prevState => {
+        const updatedCourses = {
+          ...prevState.courses,
+          [name]: value
+        };
+  
+        // Clear all course fields if the ID is empty
+        if (name === 'id' && !value) {
+          return {
+            ...prevState,
+            courses: {
+              id: '',
+              name: '',
+              courseDescription: '',
+              courseFee: '',
+              duration: ''
+            },
+            departmentDto: {
+              id: '',
+              name: '',
+              description: ''
+            }
+          };
+        }
+  
+        return {
+          ...prevState,
+          courses: updatedCourses
+        };
       });
+  
+      // Fetch course data if ID is provided
+      if (name === 'id') {
+        fetchCourseData(value);
+      }
+    } else if (dataset.section === 'department') {
+      // Handle department data update
+      setFormData(prevState => ({
+        ...prevState,
+        departmentDto: {
+          ...prevState.departmentDto,
+          [name]: value
+        }
+      }));
+  
+      // Fetch department data if ID is provided
+      if (name === 'id') {
+        fetchDepartmentData(value);
+      }
+    } else {
+      setFormData(prevState => ({
+        ...prevState,
+        [name]: type === 'checkbox' ? checked : value
+      }));
+    }
+  };
+  
+  
+  const fetchCourseData = async (courseId) => {
+    try {
+      const response = await fetch(`http://localhost:8080/course/${courseId}`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      const data = await response.json();
+      
+      // Extract the first department if it exists
+      const department = data.departments && data.departments[0] ? data.departments[0] : {};
+  
+      setCourseData(data);
+      setFormData(prevState => ({
+        ...prevState,
+        courses: {
+          ...prevState.courses,
+          id: data.id || '',
+          name: data.courseName || '',
+          courseDescription: data.courseDescription || '',
+          courseFee: data.courseFee || '',
+          createdAt: data.createdAt || '',
+          updatedAt: data.updatedAt || '',
+          duration: data.duration || '',
+          departments: data.departments || []
+        },
+        departmentDto: {
+          id: department.id || '',
+          name: department.departmentName || '',
+          description: department.description || ''
+        }
+      }));
+    } catch (error) {
+      console.error('Error fetching course data:', error);
+    }
+  };
+
+  const fetchDepartmentData = async (departmentId) => {
+    try {
+      const response = await fetch(`http://localhost:8080/department/${departmentId}`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      const data = await response.json();
+      setDepartmentData(data);
+      setFormData(prevState => ({
+        ...prevState,
+        departmentDto: {
+          ...prevState.departmentDto,
+          name: data.departmentName || ''
+        }
+      }));
+    } catch (error) {
+      console.error('Error fetching department data:', error);
     }
   };
 
@@ -97,14 +261,14 @@ function Student() {
       }]
     }));
   };
-
+  
   const handleRemoveAddress = (index) => {
     setFormData(prevState => ({
       ...prevState,
       addresses: prevState.addresses.filter((_, idx) => idx !== index)
     }));
   };
-
+  
   const handleAddMobile = () => {
     setFormData(prevState => ({
       ...prevState,
@@ -114,6 +278,7 @@ function Student() {
       }]
     }));
   };
+  
 
   const handleRemoveMobile = (index) => {
     setFormData(prevState => ({
@@ -124,7 +289,19 @@ function Student() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Form Data Submitted:', formData);
+
+    const formattedData = {
+      name: formData.name,
+      age: formData.age,
+      email: formData.email,
+      password: formData.password,
+      gender: formData.gender,
+      isVerified: formData.isVerified,
+      addresses: formData.addresses,
+      mobiles: formData.mobiles,
+      courses: formData.courses,
+      departmentDto: formData.departmentDto
+    };
 
     try {
       const response = await fetch('http://localhost:8080/employee/addStudent', {
@@ -132,7 +309,7 @@ function Student() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(formattedData),
       });
 
       if (!response.ok) {
@@ -154,6 +331,7 @@ function Student() {
       password: '',
       date: '',
       gender: '',
+      isVerified: 'false',
       addresses: [{
         streetName: '',
         city: '',
@@ -166,117 +344,120 @@ function Student() {
       mobiles: [{
         mobileNumber: '',
         mobileType: ''
-      }]
+      }],
+      courses: {
+        id: '',
+        name: '',
+        courseDescription: '',
+        courseFee: '',
+        createdAt: '',
+        updatedAt: '',
+        duration: '',
+        departments: []
+      },
+      departmentDto: {
+        id: '',
+        name: '',
+        description:''
+      }
     });
+    setCourseData(null);
+    setDepartmentData(null);
+    
   };
 
   return (
-    <>
-      <div className="container mt-4">
-        <h2>Registration Form</h2>
-        <form onSubmit={handleSubmit} className="student-form">
-          {/* Student Details */}
-          <div className="row">
-            <div className="col-md-4">
-              <div className="form-group">
-                <label htmlFor="name">Name:</label>
-                <input
-                  type="text"
-                  id="name"
-                  name="name"
-                  className="form-control"
-                  style={styles}
-                  value={formData.name}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-            </div>
-            <div className="col-md-4">
-              <div className="form-group">
-                <label htmlFor="email">Email:</label>
-                <input
-                  type="email"
-                  id="email"
-                  name="email"
-                  className="form-control"
-                  style={styles}
-                  value={formData.email}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-            </div>
-            <div className="col-md-4">
-              <div className="form-group">
-                <label htmlFor="age">Age:</label>
-                <input
-                  type="number"
-                  id="age"
-                  name="age"
-                  className="form-control"
-                  style={styles}
-                  value={formData.age}
-                  onChange={handleChange}
-                />
-              </div>
+    <div className="container mt-4">
+      <h2>Student Adm. Register Form</h2><hr className='thin'/>
+      <form onSubmit={handleSubmit} className="student-form form-group">
+       <div style={boxStyle}>
+       <div className="row">
+          <div className="col-md-4">
+            <div className="form-group">
+              <label htmlFor="name">Name:</label>
+              <input
+                type="text"
+                id="name"
+                name="name"
+                className="form-control"
+                style={styles}
+                value={formData.name}
+                onChange={handleChange}
+                required
+              />
             </div>
           </div>
-          <div className="row">
-            <div className="col-md-4">
-              <div className="form-group">
-                <label htmlFor="password">Password:</label>
-                <input
-                  type="password"
-                  id="password"
-                  name="password"
-                  className="form-control"
-                  style={styles}
-                  value={formData.password}
-                  onChange={handleChange}
-                />
-              </div>
-            </div>
-            <div className="col-md-4">
-              <div className="form-group">
-                <label htmlFor="date">Date:</label>
-                <input
-                  type="date"
-                  id="date"
-                  name="date"
-                  className="form-control"
-                  style={styles}
-                  value={formData.date}
-                  onChange={handleChange}
-                />
-              </div>
-            </div>
-            <div className="col-md-4">
-              <div className="form-group">
-                <label htmlFor="gender">Gender:</label>
-                <select
-                  id="gender"
-                  name="gender"
-                  className="form-control"
-                  style={styles}
-                  value={formData.gender}
-                  onChange={handleChange}
-                >
-                  <option value="">Select Gender</option>
-                  <option value="Male">Male</option>
-                  <option value="Female">Female</option>
-                  <option value="Other">Other</option>
-                </select>
-              </div>
+          <div className="col-md-4">
+            <div className="form-group">
+              <label htmlFor="email">Email:</label>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                className="form-control"
+                style={styles}
+                value={formData.email}
+                onChange={handleChange}
+                required
+              />
             </div>
           </div>
+          <div className="col-md-4">
+            <div className="form-group">
+              <label htmlFor="age">Age:</label>
+              <input
+                type="number"
+                id="age"
+                name="age"
+                className="form-control"
+                style={styles}
+                value={formData.age}
+                onChange={handleChange}
+                required
+              />
+            </div>
+          </div>
+        </div>
+        <div className="row">
+        <div className="col-md-4">
+            <div className="form-group">
+              <label htmlFor="name">Gender</label>
+              <input
+                type="text"
+                id="gender"
+                name="gender"
+                className="form-control"
+                style={styles}
+                value={formData.gender}
+                onChange={handleChange}
+                required
+              />
+            </div>
+          </div>
+          <div className="col-md-4">
+            <div className="form-group">
+              <label htmlFor="name">Password</label>
+              <input
+                type="text"
+                id="password"
+                name="password"
+                className="form-control"
+                style={styles}
+                value={formData.password}
+                onChange={handleChange}
+                required
+              />
+            </div>
+          </div>
+        </div>
+       </div>
 
-          {/* Address Details */}
-          <hr />
-          <h3>Address Details</h3>
-          <hr />
+        {/* Addresses */}
+        <div style={addDiv}> <label>Addresses:</label></div>
+        <div style={boxStyle}>
+        <div className="form-group">
           {formData.addresses.map((address, index) => (
-            <div key={index} className="address-section">
+            <div key={index} className="address-container">
               <div className="row">
                 <div className="col-md-4">
                   <div className="form-group">
@@ -290,6 +471,7 @@ function Student() {
                       style={styles}
                       value={address.streetName}
                       onChange={(e) => handleChange(e, index, 'address')}
+                      required
                     />
                   </div>
                 </div>
@@ -305,6 +487,7 @@ function Student() {
                       style={styles}
                       value={address.city}
                       onChange={(e) => handleChange(e, index, 'address')}
+                      required
                     />
                   </div>
                 </div>
@@ -320,6 +503,7 @@ function Student() {
                       style={styles}
                       value={address.district}
                       onChange={(e) => handleChange(e, index, 'address')}
+                      required
                     />
                   </div>
                 </div>
@@ -337,6 +521,7 @@ function Student() {
                       style={styles}
                       value={address.state}
                       onChange={(e) => handleChange(e, index, 'address')}
+                      required
                     />
                   </div>
                 </div>
@@ -352,6 +537,7 @@ function Student() {
                       style={styles}
                       value={address.country}
                       onChange={(e) => handleChange(e, index, 'address')}
+                      required
                     />
                   </div>
                 </div>
@@ -367,132 +553,286 @@ function Student() {
                       style={styles}
                       value={address.zipcode}
                       onChange={(e) => handleChange(e, index, 'address')}
+                      required
                     />
                   </div>
                 </div>
               </div>
-              <div className="row">
-                <div className="col-md-4">
-                  <div className="form-group">
-                    <label htmlFor={`addressType-${index}`}>Address Type:</label>
-                    <select
-                      id={`addressType-${index}`}
-                      name="addressType"
-                      data-section="address"
-                      className="form-control"
-                      style={styles}
-                      value={address.addressType}
-                      onChange={(e) => handleChange(e, index, 'address')}
-                    >
-                      <option value="">Select Address Type</option>
-                      <option value="PERMANENT">PERMANENT</option>
-                      <option value="WORKING">WORKING</option>
-                      <option value="OTHERS">OTHERS</option>
-                    </select>
-                  </div>
-                </div>
-                <div className="col-md-4">
-                  <button
-                    type="button"
-                    className="btn btn-danger mt-4"
-                    onClick={() => handleRemoveAddress(index)}
-                    style={remove}
-                  >
-                    Remove Address
-                  </button>
-                </div>
-                <div className="col-md-4">
+              <div className="form-group">
+                <label htmlFor={`addressType-${index}`}>Address Type:</label>
+                <select
+                  id={`addressType-${index}`}
+                  name="addressType"
+                  data-section="address"
+                  className="form-control"
+                  style={styles}
+                  value={address.addressType}
+                  onChange={(e) => handleChange(e, index, 'address')}
+                  required
+                >
+                  <option value="">Select Type</option>
+                  {addressTypes.map((type, idx) => (
+                    <option key={idx} value={type}>{type}</option>
+                  ))}
+                </select>
+              </div>
+              {formData.addresses.length > 1 && (
                 <button
+                  type="button"
+                  className="btn btn-danger"
+                  style={removeStyle}
+                  onClick={() => handleRemoveAddress(index)}
+                >
+                  Remove Address
+                </button>
+              )}
+            </div>
+          ))}
+          <button
             type="button"
-            className="btn btn-success mt-4"
+            style={floaat}
+            className="btn btn-primary"
             onClick={handleAddAddress}
-            style={{width:'100%'}}
           >
-            Add Address
+           Add More
           </button>
-                </div>
-              </div>
-            </div>
-          ))}
+        </div>
+        </div>
 
-          
-
-          {/* Mobile Details */}
-          <hr />
-          <h3>Mobile Details</h3>
-          <hr />
-          <br />
-          {formData.mobiles.map((mobile, index) => (
-            <div key={index} className="mobile-section">
-              <div className="row">
-                <div className="col-md-6">
-                  <div className="form-group">
-                    <label htmlFor={`mobileNumber-${index}`}>Mobile Number:</label>
-                    <input
-                      type="text"
-                      id={`mobileNumber-${index}`}
-                      name="mobileNumber"
-                      data-section="mobile"
-                      className="form-control"
-                      style={styles}
-                      value={mobile.mobileNumber}
-                      onChange={(e) => handleChange(e, index, 'mobile')}
-                    />
-                  </div>
-                </div>
-                <div className="col-md-6">
-                  <div className="form-group">
-                    <label htmlFor={`mobileType-${index}`}>Mobile Type:</label>
-                    <select
-                      id={`mobileType-${index}`}
-                      name="mobileType"
-                      data-section="mobile"
-                      className="form-control"
-                      style={styles}
-                      value={mobile.mobileType}
-                      onChange={(e) => handleChange(e, index, 'mobile')}
-                    >
-                      <option value="">Select Mobile Type</option>
-                      <option value="PERSONAL">PERSONAL</option>
-                      <option value="PARENT">PARENT</option>
-                      <option value="FAMILY">FAMILY</option>
-                      <option value="OTHER">OTHER</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-             <div className="row">
-             <div className="col-md-6">
-              <button
-                type="button"
-                className="btn btn-danger mt-4"
-                onClick={() => handleRemoveMobile(index)}
-                style={remove}
-              >
-                Remove Mobile
-              </button>
-              </div>
-             <div className="col-md-6">
-             <button
-            type="button"
-            className="btn btn-success mt-4"
-            onClick={handleAddMobile}
-            style={{ width: '50%' }}
-          >
-            Add Mobile
-          </button>
-             </div>
-             </div>
-            </div>
-          ))}
-
+        {/* Mobiles */}
+        <div style={addDiv}><label>Mobiles:</label></div>
+        <div style={boxStyle}>
+        <div className="form-group">
          
+         {formData.mobiles.map((mobile, index) => (
+           <div key={index} className="mobile-container">
+             <div className="row">
+               <div className="col-md-6">
+                 <div className="form-group">
+                   <label htmlFor={`mobileNumber-${index}`}>Mobile Number:</label>
+                   <input
+                     type="text"
+                     id={`mobileNumber-${index}`}
+                     name="mobileNumber"
+                     data-section="mobile"
+                     className="form-control"
+                     style={styles}
+                     value={mobile.mobileNumber}
+                     onChange={(e) => handleChange(e, index, 'mobile')}
+                     required
+                   />
+                 </div>
+               </div>
+               <div className="col-md-6">
+                 <div className="form-group">
+                   <label htmlFor={`mobileType-${index}`}>Mobile Type:</label>
+                   <select
+                     id={`mobileType-${index}`}
+                     name="mobileType"
+                     data-section="mobile"
+                     className="form-control"
+                     style={styles}
+                     value={mobile.mobileType}
+                     onChange={(e) => handleChange(e, index, 'mobile')}
+                     required
+                   >
+                     <option value="">Select Type</option>
+                     {mobileTypes.map((type, idx) => (
+                       <option key={idx} value={type}>{type}</option>
+                     ))}
+                   </select>
+                 </div>
+               </div>
+             </div>
+             {formData.mobiles.length > 1 && (
+               <button
+                 type="button"
+                 className="btn btn-danger"
+                 style={removeStyle}
+                 onClick={() => handleRemoveMobile(index)}
+               >
+                 Remove Mobile
+               </button>
+             )}
+           </div>
+         ))}
+         <button
+           type="button"
+           style={floaat}
+           className="btn btn-primary"
+           onClick={handleAddMobile}
+         >
+           Add More 
+         </button>
+       </div>
+        </div>
 
-          <button type="submit" className="btn btn-primary mt-4" style={submit}>Submit</button>
-        </form>
+        {/* Course Details */}
+       <div className="row">
+        <div className="col-6">
+        <div style={addDiv1}><label htmlFor="">Course Details</label></div>
+     <div style={boxStyle}>
+     <div className="form-group">
+        <label htmlFor="courseId">Course ID:&nbsp;&nbsp;</label>
+        <label htmlFor="">(eg: 1, 2, 3, ...)</label>
+        <input
+          type="text"
+          id="courseId"
+          name="id"
+          className="form-control"
+          style={styles}
+          value={formData.courses.id}
+          onChange={(e) => handleChange(e, 'course')}
+          data-section="course"
+          required
+        />
       </div>
-    </>
+      <div className="form-group">
+       <div className="input-container">
+       <label htmlFor="courseName">Course Name:</label>
+        <input
+          type="text"
+          id="courseName"
+          name="name"
+          className="form-control"
+          style={styles}
+          value={formData.courses.name}
+          onChange={(e) => handleChange(e, 'course')}
+          data-section="course"
+          required
+          readOnly
+        />
+         <span className="read-only-indicator" title="This field is read-only"></span>
+       </div>
+      </div>
+      <div className="form-group">
+        <div className="input-container">
+        <label htmlFor="courseDescription">Course Description:</label>
+        <textarea
+          id="courseDescription"
+          name="courseDescription"
+          className="form-control"
+          style={styles}
+          value={formData.courses.courseDescription}
+          onChange={(e) => handleChange(e, 'course')}
+          data-section="course"
+          required
+          readOnly
+        />
+         <span className="read-only-indicator" title="This field is read-only"></span>
+        </div>
+
+      </div>
+      <div className="form-group">
+       <div className="input-container">
+       <label htmlFor="courseFee">Course Fee:</label>
+        <input
+          type="text"
+          id="courseFee"
+          name="courseFee"
+          className="form-control"
+          style={styles}
+          value={formData.courses.courseFee}
+          onChange={(e) => handleChange(e, 'course')}
+          data-section="course"
+          required
+          readOnly
+        />
+                 <span className="read-only-indicator" title="This field is read-only"></span>
+       </div>
+      </div>
+      <div className="form-group">
+        <div className="input-container">
+        <label htmlFor="courseDuration">Course Duration:</label>
+        <input
+          type="text"
+          id="courseDuration"
+          name="duration"
+          className="form-control"
+          style={styles}
+          value={formData.courses.duration}
+          onChange={(e) => handleChange(e, 'course')}
+          data-section="course"
+          required
+          readOnly
+        />
+         <span className="read-only-indicator" title="This field is read-only"></span>
+      </div>
+        </div>
+      </div>
+        </div>
+
+      <div className="col-6">
+      <div style={addDiv1}><label htmlFor="">Department Details</label></div>
+      <div style={boxStyle}>
+      <div className="form-group">
+        
+       <div className="input-container">
+       <label htmlFor="departmentId">Department ID:</label>
+        <input
+          type="text"
+          id="departmentId"
+          name="id"
+          className="form-control"
+          style={styles}
+          value={formData.departmentDto.id}
+          onChange={(e) => handleChange(e, 'department')}
+          data-section="department"
+          required
+          readOnly
+        />
+         <span className="read-only-indicator" title="This field is read-only"></span>
+      </div>
+       </div>
+      <div className="form-group">
+  <label htmlFor="departmentName">Department Name:</label>
+  <div className="input-container">
+    <input
+      type="text"
+      id="departmentName"
+      name="name"
+      className="form-control"
+      style={styles}
+      value={formData.departmentDto.name}
+      onChange={(e) => handleChange(e, 'department')}
+      data-section="department"
+      required
+      readOnly
+    />
+    <span className="read-only-indicator" title="This field is read-only"></span>
+  </div>
+</div>
+
+      <div className="form-group">
+       <div className="input-container">
+       <label htmlFor="departmentDescription">Description:</label>
+        <input
+          type="text"
+          id="departmentDescription"
+          name="description"
+          className="form-control"
+          style={styles}
+          value={formData.departmentDto.description || ''}
+          onChange={(e) => handleChange(e, 'department')}
+          data-section="department"
+          required
+          readOnly
+        />
+         <span className="read-only-indicator" title="This field is read-only"></span>
+      </div>
+       </div>
+     </div>
+      </div>
+     </div>
+        
+       
+        <button type="submit"  className="btn btn-success" style={floaat}>
+          Submit
+        </button>
+      </form>
+
+    </div>
   );
-}
+};
 
 export default Student;

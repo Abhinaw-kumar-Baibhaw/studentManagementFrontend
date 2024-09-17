@@ -6,9 +6,18 @@
   /* width: 425px; */
   margin: 0 auto;
   padding: 20px;
-  border: 1px solid #ccc;
+  /* border: 1px solid #ccc; */
   border-radius: 8px;
   padding-right:35px;
+}
+
+hr.thin {
+  height: 0.2rem;
+  width: 34rem; /* Thinner line */
+  background: #110202; /* Lighter color */
+  position: absolute; /* Absolute positioning to overlap text */
+  left: 50%; /* Center horizontally */
+  transform: translateX(-50%);
 }
 
 .student-form div {
@@ -53,9 +62,10 @@ label{
 .student-form select {
   width: 106%;
   padding: 8px;
-  border: 1px solid #ccc;
+  border: 1px solid #cccccc;
   border-radius: 4px;
 }
+
 
 .student-form button {
   padding: 10px 15px;
@@ -85,4 +95,110 @@ tr{
 .table tbody tr:hover {
   background-color: #e9ecef;
 }
+
+
+/* Student.css */
+
+/* Container styling */
+/* .container {
+  background-color: #ffffff;
+  padding: 2rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+} */
+
+/* Styling for headings */
+h2 {
+  font-size: 2rem;
+  font-weight: 600;
+}
+
+/* Button styling */
+.btn-primary {
+  padding: 0.5rem 1.5rem;
+  font-size: 1rem;
+}
+
+/* Table header styling */
+.table thead th {
+  background-color: #343a40;
+  color: #ffffff;
+  font-weight: bold;
+}
+
+/* Table row hover effect */
+.table tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+/* Spinner for loading state */
+.spinner-border {
+  width: 5rem;
+  height: 5rem;
+  border-width: 0.4rem;
+}
+
+/* Center text styling */
+.text-center {
+  text-align: center;
+}
+
+/* Muted text styling */
+.text-muted {
+  color: #6c757d;
+}
+
+/* Additional padding for table */
+.table td, .table th {
+  padding: 0.75rem;
+}
+
+/* Responsive table styling */
+.table-responsive {
+  overflow-x: auto;
+}
+
+
+
+
+
+.input-container {
+  position: relative;
+}
+
+.form-control {
+  position: relative; /* Ensure the input field is positioned */
+}
+
+.read-only-indicator {
+  position: absolute;
+  top: 50%;
+  right: -20px;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  background-color: red;
+  border-radius: 50%;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 12px;
+  font-weight: bold;
+  cursor: not-allowed;
+}
+
+.form-control:hover ~ .read-only-indicator {
+  display: flex;
+}
+
+.read-only-indicator::after {
+  content: '✘'; 
+}
+
+/* .form-control[readonly] {
+  pointer-events: none; 
+} */
+
+
 

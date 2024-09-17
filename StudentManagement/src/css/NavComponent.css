@@ -1,0 +1,34 @@
+/* NavComponent.css */
+
+.navbar-custom {
+    background: linear-gradient(45deg, #1e3c72, #476fb5); /* Gradient background */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+  }
+  
+  .navbar-custom .navbar-brand {
+    font-weight: bold;
+    color: wheat;
+    font-size: 1.5rem; /* Larger font size */
+  }
+  
+  .navbar-custom .nav-link {
+    color: #f8f9fa !important; /* White text color */
+    font-size: 1.1rem;
+    margin-left: 15px; /* Spacing between links */
+  }
+  
+  .navbar-custom .nav-link:hover {
+    color: #ffd700 !important; /* Gold color on hover */
+    text-decoration: underline;
+    transition: color 0.3s, text-decoration 0.3s;
+  }
+  
+  .navbar-custom .nav-link.active {
+    color: #ffd700 !important; /* Gold color for active link */
+    font-weight: bold;
+  }
+  
+  .navbar-toggler-icon {
+    background-image: url('data:image/svg+xml;charset=utf8,%3csvg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 30 30"%3e%3cpath stroke="%23ffffff" stroke-width="2" d="M5 7h20M5 15h20M5 23h20"/%3e%3c/svg%3e');
+  }
+  

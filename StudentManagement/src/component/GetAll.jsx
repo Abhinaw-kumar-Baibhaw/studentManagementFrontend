@@ -1,13 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import 'bootstrap/dist/css/bootstrap.min.css'; // Import Bootstrap CSS
+import 'bootstrap/dist/css/bootstrap.min.css';
 import '../css/Student.css'; // Ensure this path is correct
 
 function GetAll() {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [selectedStudent, setSelectedStudent] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
 
+  // Fetch data from the server
   const fetchData = async () => {
     setLoading(true);
     setError(null);
@@ -23,15 +26,73 @@ function GetAll() {
     }
   };
 
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    return date.toLocaleDateString();
+  };
+
+  const handleEditClick = (student) => {
+    setSelectedStudent(student);
+    setIsEditing(true);
+  };
+  
+
+  const handleCloseForm = () => {
+    setIsEditing(false);
+    setSelectedStudent(null);
+  };
+
+  const body1 = {
+    fontWeight:'600'
+  }
+
+  const handleFormChange = (e) => {
+    const { name, value } = e.target;
+    setSelectedStudent(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await axios.put(`http://localhost:8080/employee/update/${selectedStudent.studentId}`, selectedStudent);
+      alert('Record updated successfully');
+      fetchData(); // Refresh data after update
+      handleCloseForm(); // Close the form
+    } catch (err) {
+      console.error('Error updating record:', err);
+      alert('Failed to update record');
+    }
+  };
+
   return (
-    <div className="container mt-4">
-      <button onClick={fetchData} className="btn btn-primary mb-3">See All Data</button>
-      {loading && <p>Loading...</p>}
-      {error && <p className="text-danger">{error}</p>}
+    <div>
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <h2 className="text-primary">Student Data</h2>
+        <button onClick={fetchData} className="btn btn-primary">
+          <i className="bi bi-arrow-clockwise"></i> REFRESH TO SEE
+        </button>
+      </div>
+
+      {loading && (
+        <div className="text-center mb-4">
+          <div className="spinner-border" role="status">
+            <span className="sr-only">Loading...</span>
+          </div>
+        </div>
+      )}
+      {error && <p className="text-danger text-center">{error}</p>}
       {!loading && !error && data.length > 0 ? (
         <div className="table-responsive">
-          <table className="table table-striped table-bordered">
-            <thead>
+          <table className="table table-hover table-bordered">
+            <thead className="thead-dark">
               <tr>
                 <th>ID</th>
                 <th>Name</th>
@@ -40,37 +101,254 @@ function GetAll() {
                 <th>Gender</th>
                 <th>Password</th>
                 <th>Registered Date</th>
+                <th>Course ID</th>
                 <th>Course Name</th>
                 <th>Course Description</th>
                 <th>Course Fee</th>
                 <th>Course Duration</th>
+                <th>Department ID</th>
                 <th>Department Name</th>
                 <th>Department Description</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
               {data.map((student) => (
-                <tr key={student.studentId}>
-                  <td>{student.studentId}</td>
-                  <td>{student.name}</td>
-                  <td>{student.email}</td>
-                  <td>{student.age}</td>
-                  <td>{student.gender}</td>
-                  <td>{student.password}</td>
-                  <td>{new Date(student.date).toLocaleDateString()}</td>
-                  <td>{student.course?.courseName || 'N/A'}</td>
-                  <td>{student.course?.courseDescription || 'N/A'}</td>
-                  <td>{student.course?.courseFee || 'N/A'}</td>
-                  <td>{student.course?.duration || 'N/A'}</td>
-                  <td>{student.department?.departmentName || 'N/A'}</td>
-                  <td>{student.department?.description || 'N/A'}</td>
-                </tr>
+                <React.Fragment key={student.studentId}>
+                  <tr style={body1}>
+                    <td>{student.studentId}</td>
+                    <td>{student.name}</td>
+                    <td>{student.email}</td>
+                    <td>{student.age}</td>
+                    <td>{student.gender}</td>
+                    <td>{student.password}</td>
+                    <td>{formatDate(student.registerDate)}</td>
+                    <td>{student.courses?.id || 'N/A'}</td>
+                    <td>{student.courses?.courseName || 'N/A'}</td>
+                    <td>{student.courses?.courseDescription || 'N/A'}</td>
+                    <td>{student.courses?.courseFee || 'N/A'}</td>
+                    <td>{student.courses?.duration || 'N/A'}</td>
+                    <td>{student.courses?.departments && student.courses.departments.length > 0 ? student.courses.departments[0].id : 'N/A'}</td>
+                    <td>{student.courses?.departments && student.courses.departments.length > 0 ? student.courses.departments[0].departmentName : 'N/A'}</td>
+                    <td>{student.courses?.departments && student.courses.departments.length > 0 ? student.courses.departments[0].description : 'N/A'}</td>
+                    <td>
+                      <button
+                        className="btn btn-warning btn-sm"
+                        onClick={() => handleEditClick(student)}
+                      >
+                        Update
+                      </button>
+                    </td>
+                  </tr>
+                  {student.courses?.departments && student.courses.departments.length > 1 && student.courses.departments.slice(1).map((department, index) => (
+                    <tr key={student.studentId + '-dept-' + index}>
+                      <td colSpan="7"></td>
+                      <td>{department.id}</td>
+                      <td>{department.departmentName}</td>
+                      <td>{department.description}</td>
+                      <td colSpan="6"></td>
+                    </tr>
+                  ))}
+                </React.Fragment>
               ))}
             </tbody>
           </table>
         </div>
       ) : (
-        <p>No data available.</p>
+        <p className="text-muted text-center">No data available.</p>
+      )}
+
+      {isEditing && selectedStudent && (
+        <div className="modal show" style={{ display: 'block' }} role="dialog">
+          <div className="modal-dialog" role="document">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">Update Student</h5>
+                {/* <button type="button" className="close" onClick={handleCloseForm}>
+                  <span>&times;</span>
+                </button> */}
+              </div>
+              <form onSubmit={handleSubmit}>
+                <div className="modal-body">
+                  <div className="form-group">
+                    <label htmlFor="studentId">ID:</label>
+                    <input
+                      type="text"
+                      id="studentId"
+                      name="studentId"
+                      className="form-control"
+                      value={selectedStudent.studentId}
+                      readOnly
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="name">Name:</label>
+                    <input
+                      type="text"
+                      id="name"
+                      name="name"
+                      className="form-control"
+                      value={selectedStudent.name}
+                      onChange={handleFormChange}
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="email">Email:</label>
+                    <input
+                      type="email"
+                      id="email"
+                      name="email"
+                      className="form-control"
+                      value={selectedStudent.email}
+                      onChange={handleFormChange}
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="age">Age:</label>
+                    <input
+                      type="number"
+                      id="age"
+                      name="age"
+                      className="form-control"
+                      value={selectedStudent.age}
+                      onChange={handleFormChange}
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="gender">Gender:</label>
+                    <input
+                      type="text"
+                      id="gender"
+                      name="gender"
+                      className="form-control"
+                      value={selectedStudent.gender}
+                      onChange={handleFormChange}
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="password">Password:</label>
+                    <input
+                      type="text"
+                      id="password"
+                      name="password"
+                      className="form-control"
+                      value={selectedStudent.password}
+                      onChange={handleFormChange}
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="registerDate">Registered Date:</label>
+                    <input
+                      type="text"
+                      id="registerDate"
+                      name="registerDate"
+                      className="form-control"
+                      value={formatDate(selectedStudent.registerDate)}
+                      readOnly
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="courseId">Course ID:</label>
+                    <input
+                      type="text"
+                      id="courseId"
+                      name="courseId"
+                      className="form-control"
+                      value={selectedStudent.courses?.id || ''}
+                      onChange={handleFormChange}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="courseName">Course Name:</label>
+                    <input
+                      type="text"
+                      id="courseName"
+                      name="courseName"
+                      className="form-control"
+                      value={selectedStudent.courses?.courseName || ''}
+                      onChange={handleFormChange}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="courseDescription">Course Description:</label>
+                    <input
+                      type="text"
+                      id="courseDescription"
+                      name="courseDescription"
+                      className="form-control"
+                      value={selectedStudent.courses?.courseDescription || ''}
+                      onChange={handleFormChange}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="courseFee">Course Fee:</label>
+                    <input
+                      type="text"
+                      id="courseFee"
+                      name="courseFee"
+                      className="form-control"
+                      value={selectedStudent.courses?.courseFee || ''}
+                      onChange={handleFormChange}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="duration">Course Duration:</label>
+                    <input
+                      type="text"
+                      id="duration"
+                      name="duration"
+                      className="form-control"
+                      value={selectedStudent.courses?.duration || ''}
+                      onChange={handleFormChange}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="departmentId">Department ID:</label>
+                    <input
+                      type="text"
+                      id="departmentId"
+                      name="departmentId"
+                      className="form-control"
+                      value={selectedStudent.courses?.departments?.[0]?.id || ''}
+                      onChange={handleFormChange}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="departmentName">Department Name:</label>
+                    <input
+                      type="text"
+                      id="departmentName"
+                      name="departmentName"
+                      className="form-control"
+                      value={selectedStudent.courses?.departments?.[0]?.departmentName || ''}
+                      onChange={handleFormChange}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="departmentDescription">Department Description:</label>
+                    <input
+                      type="text"
+                      id="departmentDescription"
+                      name="departmentDescription"
+                      className="form-control"
+                      value={selectedStudent.courses?.departments?.[0]?.description || ''}
+                      onChange={handleFormChange}
+                    />
+                  </div>
+                </div>
+                <div className="modal-footer">
+                  <button type="submit" className="btn btn-primary">Save changes</button>
+                  <button type="button" className="btn btn-secondary" onClick={handleCloseForm}>Close</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
